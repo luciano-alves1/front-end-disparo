@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="env-api-url" content="http://localhost:8000">
     <title>Info Rede Cliente</title>
     <style>
         * {
@@ -66,38 +67,18 @@
             background: #dc3545;
             color: white;
         }
-
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Status da API -->
         <div class="card" style="margin-bottom: 20px;">
-
-            <p>API Backend: <span id="apiUrl">http://127.0.0.1:5500</span></p>
+            <p>API Backend: <span id="apiUrl">http://localhost:8000</span></p>
             <button class="btn btn-secondary" onclick="verificarAPI()">Verificar Conexão</button>
-        </div>
-
-        <!-- Tab 3: Comandos da API -->
-        <div id="APICommands" class="tabcontent">
-            <div class="card">
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                </div>
-            </div>
         </div>
     </div>
 
     <script>
-        // Configuração da API
-        const API_URL = 'http://localhost:8000';
-
-        // Verificar status da API ao carregar
-        window.onload = function() {
-            verificarAPI();
-            // atualizarInfoBrowser();
-            executarComando('ipconfig');
-        };
-
         // Verificar se a API está online
         async function verificarAPI() {
             const statusBadge = document.getElementById('apiStatus');
@@ -119,10 +100,7 @@
 
         // Buscar informações do cliente via API
         async function buscarInfoCliente() {
-            const output = document.getElementById('clienteOutput');
-            
-            output.textContent = 'Buscando informações...';
-            
+            const output = document.getElementById('clienteOutput');            
             try {
                 const response = await fetch(`${API_URL}/cliente/info`);
                 const data = await response.json();
@@ -158,6 +136,40 @@
                 output.textContent = 'Erro ao executar comando: ' + error.message;
             } 
         }
+
+                // Configuração da API
+        const API_URL = getEnvVar('API_URL') || 'http://localhost:8000';
+
+        // Verificar status da API ao carregar
+        window.onload = function() {
+            verificarAPI();
+            executarComando('ipconfig');
+        };
+
+        // Função para ler variáveis de ambiente (para desenvolvimento)
+        function getEnvVar(name) {
+        // Em desenvolvimento, tenta ler do .env
+        // Em produção, as variáveis podem ser injetadas pelo servidor
+        if (typeof process !== 'undefined' && process.env) {
+            return process.env[name];
+        }
+        
+        // Fallback para desenvolvimento local
+        const envElements = document.querySelectorAll('meta[name="env-' + name.toLowerCase() + '"]');
+        if (envElements.length > 0) {
+            return envElements[0].content;
+        }
+        
+        return null;
+    }
+ 
+    // Atualizar a UI com a URL da API
+    document.addEventListener('DOMContentLoaded', function() {
+        const apiUrlElement = document.getElementById('apiUrl');
+        if (apiUrlElement) {
+            apiUrlElement.textContent = API_URL;
+        }
+    });
     </script>
 </body>
 </html>

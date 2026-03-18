@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Info Rede Cliente</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 5px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .status-online {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-offline {
+            background: #dc3545;
+            color: white;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Status da API -->
+        <div class="card" style="margin-bottom: 20px;">
+
+            <p>API Backend: <span id="apiUrl">http://127.0.0.1:5500</span></p>
+            <button class="btn btn-secondary" onclick="verificarAPI()">Verificar Conexão</button>
+        </div>
+
+        <!-- Tab 3: Comandos da API -->
+        <div id="APICommands" class="tabcontent">
+            <div class="card">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuração da API
+        const API_URL = 'http://localhost:8000';
+
+        // Verificar status da API ao carregar
+        window.onload = function() {
+            verificarAPI();
+            // atualizarInfoBrowser();
+            executarComando('ipconfig');
+        };
+
+        // Verificar se a API está online
+        async function verificarAPI() {
+            const statusBadge = document.getElementById('apiStatus');
+            statusBadge.className = 'status-badge';
+            try {
+                const response = await fetch(`${API_URL}/`);
+                if (response.ok) {
+                    statusBadge.textContent = 'Online';
+                    statusBadge.classList.add('status-online');
+                } else {
+                    statusBadge.textContent = 'Offline';
+                    statusBadge.classList.add('status-offline');
+                }
+            } catch (error) {
+                statusBadge.textContent = 'Offline';
+                statusBadge.classList.add('status-offline');
+            }
+        }
+
+        // Buscar informações do cliente via API
+        async function buscarInfoCliente() {
+            const output = document.getElementById('clienteOutput');
+            
+            output.textContent = 'Buscando informações...';
+            
+            try {
+                const response = await fetch(`${API_URL}/cliente/info`);
+                const data = await response.json();
+                
+                output.className = 'output';
+                output.textContent = data.saida || JSON.stringify(data, null, 2);
+            } catch (error) {
+                output.className = 'output error';
+                output.textContent = 'Erro ao buscar informações: ' + error.message;
+            }
+        }
+
+        // Executar comando na API
+        async function executarComando(comando) {            
+            if (!comando) {
+                comando = 'ipconfig';
+            }            
+            try {
+                const response = await fetch(`${API_URL}/executar`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ comando: comando })
+                });
+                
+                const data = await response.json();
+                
+                output.className = 'output';
+                output.textContent = data.saida || JSON.stringify(data, null, 2);
+            } catch (error) {
+                output.className = 'output error';
+                output.textContent = 'Erro ao executar comando: ' + error.message;
+            } 
+        }
+    </script>
+</body>
+</html>
